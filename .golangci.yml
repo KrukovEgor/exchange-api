@@ -1,0 +1,100 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gosec
+    - bodyclose
+    - contextcheck
+    - errorlint
+    - noctx
+    - nilerr
+    - sqlclosecheck
+    - rowserrcheck
+    - unparam
+    - unconvert
+    - misspell
+    - goconst
+    - gocritic
+    - revive
+    - copyloopvar
+    - dupl
+    - prealloc
+    - wastedassign
+    - whitespace
+  settings:
+    govet:
+      enable:
+        - shadow
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    gosec:
+      excludes:
+        - G404
+    revive:
+      severity: warning
+      rules:
+        - name: exported
+          severity: warning
+        - name: package-comments
+          disabled: true
+        - name: unused-parameter
+        - name: context-as-argument
+        - name: error-return
+        - name: error-naming
+        - name: indent-error-flow
+        - name: var-naming
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+    dupl:
+      threshold: 150
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    misspell:
+      locale: US
+    unparam:
+      check-exported: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+    rules:
+      - path: _test\.go
+        linters:
+          - dupl
+          - gosec
+          - errcheck
+          - goconst
+      - path: internal/provider/.*
+        linters:
+          - dupl
+      - path: cmd/.*
+        linters:
+          - gochecknoinits
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/KrukovEgor/exchange-api
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
