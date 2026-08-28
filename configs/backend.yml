@@ -1,2 +1,9 @@
 server:
   port: 8080
+provider:
+  easybit:
+    base_url: "https://api.easybit.com"
+    request_timeout: 10s
+    limiter_rate: 15
+    limiter_burst: 15
+    disable_keep_alives: true

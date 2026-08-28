@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 )
 
 func Load(configPath string) (*Config, error) {
-	const op = "Load"
+	const op = "config.Load"
 
 	var cfg Config
 
@@ -19,6 +20,8 @@ func Load(configPath string) (*Config, error) {
 
 		return &cfg, nil
 	}
+
+	_ = godotenv.Load()
 
 	err := cleanenv.ReadConfig(configPath, &cfg)
 	if err != nil {
