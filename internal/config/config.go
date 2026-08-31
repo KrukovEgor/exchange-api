@@ -22,6 +22,7 @@ type (
 		RequestTimeout    time.Duration `yaml:"request_timeout"`
 		LimiterRate       int           `yaml:"limiter_rate"`
 		LimiterBurst      int           `yaml:"limiter_burst"`
+		MaxRetries        int           `yaml:"max_retries"`
 		DisableKeepAlives bool          `yaml:"disable_keep_alives"`
 	}
 )

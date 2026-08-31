@@ -6,4 +6,5 @@ provider:
     request_timeout: 10s
     limiter_rate: 15
     limiter_burst: 15
+    max_retries: 3
     disable_keep_alives: true
