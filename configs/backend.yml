@@ -3,8 +3,7 @@ server:
 provider:
   easybit:
     base_url: "https://api.easybit.com"
-    request_timeout: 10s
     limiter_rate: 15
     limiter_burst: 15
-    max_retries: 3
-    disable_keep_alives: true
+    request_timeout: 20s
+    max_idle_conns_per_host: 20
