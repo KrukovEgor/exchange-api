@@ -17,12 +17,11 @@ type (
 	}
 
 	EasyBitConfig struct {
-		BaseURL           string        `yaml:"base_url"`
-		APIKey            string        `env:"EASYBIT_API_KEY" env-required:"true"`
-		RequestTimeout    time.Duration `yaml:"request_timeout"`
-		LimiterRate       int           `yaml:"limiter_rate"`
-		LimiterBurst      int           `yaml:"limiter_burst"`
-		MaxRetries        int           `yaml:"max_retries"`
-		DisableKeepAlives bool          `yaml:"disable_keep_alives"`
+		BaseURL             string        `yaml:"base_url"`
+		APIKey              string        `env:"EASYBIT_API_KEY" env-required:"true"`
+		LimiterRate         int           `yaml:"limiter_rate"`
+		LimiterBurst        int           `yaml:"limiter_burst"`
+		RequestTimeout      time.Duration `yaml:"request_timeout"`
+		MaxIdleConnsPerHost int           `yaml:"max_idle_conns_per_host"`
 	}
 )
