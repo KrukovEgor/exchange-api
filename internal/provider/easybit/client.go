@@ -10,8 +10,11 @@ import (
 	"github.com/cenkalti/backoff/v7"
 )
 
-const defaultEasyBitURL = "https://api.easybit.com"
-const maxRetriesNumber = 3
+const (
+	defaultEasyBitURL = "https://api.easybit.com"
+
+	maxRetriesNumber = 3
+)
 
 type EasyBitClient struct {
 	HTTPClient *http.Client
@@ -55,7 +58,7 @@ func (c *EasyBitClient) doRequest(
 
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
-			return struct{}{}, backoff.Permanent(fmt.Errorf("failed to send request: %w", err))
+			return struct{}{}, fmt.Errorf("failed to send request: %w", err)
 		}
 		defer resp.Body.Close()
 
@@ -66,7 +69,7 @@ func (c *EasyBitClient) doRequest(
 
 		err = json.NewDecoder(resp.Body).Decode(out)
 		if err != nil {
-			return struct{}{}, fmt.Errorf("%s: failed to decode response: %w", op, err)
+			return struct{}{}, backoff.Permanent(fmt.Errorf("failed to decode response: %w", err))
 		}
 
 		return struct{}{}, nil
