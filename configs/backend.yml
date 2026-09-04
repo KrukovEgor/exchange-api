@@ -1,5 +1,9 @@
 server:
   port: 8080
+redis:
+  port: 6379
+  min_idle_conns: 10
+  max_idle_conns: 20
 provider:
   easybit:
     base_url: "https://api.easybit.com"
@@ -7,3 +11,4 @@ provider:
     limiter_burst: 15
     request_timeout: 20s
     max_idle_conns_per_host: 20
+  
