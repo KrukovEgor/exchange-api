@@ -1,14 +1,24 @@
 server:
   port: 8080
 redis:
-  port: 6379
+  host: "redis"
+  port: "6379"
   min_idle_conns: 10
   max_idle_conns: 20
+  dial_timeout: 3s
+  read_timeout: 2s
+  write_timeout: 2s
+currency_cache:
+  base_ttl: 5m
+  stale_ttl: 12h
+  refresh_delta: 4m
 provider:
   easybit:
     base_url: "https://api.easybit.com"
     limiter_rate: 15
     limiter_burst: 15
+    attempt_timeout: 5s
+    max_retries: 3
     request_timeout: 20s
     max_idle_conns_per_host: 20
   
