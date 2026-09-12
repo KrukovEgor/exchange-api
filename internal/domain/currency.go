@@ -1,5 +1,9 @@
 package domain
 
+import (
+	"context"
+)
+
 type (
 	Currency struct {
 		CurrencyTicker string    `json:"currency_ticker"`
@@ -12,3 +16,8 @@ type (
 		NetworkName   string `json:"network_name"`
 	}
 )
+
+type CurrencyCache interface {
+	Set(ctx context.Context, direction string, value []Currency) error
+	Get(ctx context.Context, direction string) ([]Currency, error)
+}

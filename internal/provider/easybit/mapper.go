@@ -4,28 +4,22 @@ import (
 	"github.com/KrukovEgor/exchange-api/internal/domain"
 )
 
-const (
-	sendDirection    = "send"
-	receiveDirection = "receive"
-)
-
-func mapCurrency(dto currency, direction string) domain.Currency {
+func mapCurrency(dto currency, dir domain.Direction) domain.Currency {
 	return domain.Currency{
 		CurrencyTicker: dto.Currency,
 		CurrencyName:   dto.Name,
-		NetworkList:    mapNetworks(dto.NetworkList, direction),
+		NetworkList:    mapNetworks(dto.NetworkList, dir),
 	}
 }
 
-func mapCurrencies(dtos []currency, direction string) []domain.Currency {
+func mapCurrencies(dtos []currency, dir domain.Direction) []domain.Currency {
 	domainCurrencies := make([]domain.Currency, 0, len(dtos))
 
 	for _, dto := range dtos {
-		if direction == sendDirection && dto.SendStatusAll ||
-			direction == receiveDirection && dto.ReceiveStatusAll {
-			mappedCurrency := mapCurrency(dto, direction)
+		if dto.available(dir) {
+			mappedCurrency := mapCurrency(dto, dir)
 			if len(mappedCurrency.NetworkList) > 0 {
-				domainCurrencies = append(domainCurrencies, mapCurrency(dto, direction))
+				domainCurrencies = append(domainCurrencies, mappedCurrency)
 			}
 		}
 	}
@@ -40,15 +34,36 @@ func mapNetwork(dto network) domain.Network {
 	}
 }
 
-func mapNetworks(dtos []network, direction string) []domain.Network {
+func mapNetworks(dtos []network, dir domain.Direction) []domain.Network {
 	domainNetworks := make([]domain.Network, 0, len(dtos))
 
 	for _, dto := range dtos {
-		if direction == sendDirection && dto.SendStatus ||
-			direction == receiveDirection && dto.ReceiveStatus {
+		if dto.available(dir) {
 			domainNetworks = append(domainNetworks, mapNetwork(dto))
 		}
 	}
 
 	return domainNetworks
+}
+
+func (c currency) available(dir domain.Direction) bool {
+	switch dir {
+	case domain.SendDirection:
+		return c.SendStatusAll
+	case domain.ReceiveDirection:
+		return c.ReceiveStatusAll
+	default:
+		return false
+	}
+}
+
+func (n network) available(dir domain.Direction) bool {
+	switch dir {
+	case domain.SendDirection:
+		return n.SendStatus
+	case domain.ReceiveDirection:
+		return n.ReceiveStatus
+	default:
+		return false
+	}
 }

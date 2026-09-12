@@ -1,0 +1,43 @@
+version: "3"
+
+vars:
+  ENTRY_POINT: "./cmd/api/main.go"
+  BUILD_DIR: "./build"
+  BIN_FILE: "{{.BUILD_DIR}}/api"
+
+  CONFIG_PATH: "./configs/backend.yml"
+
+  COMPOSE_FILE: ".docker-compose.yml"
+
+tasks:
+  local:build:
+    cmds:
+      - go build -o {{.BIN_FILE}} {{.ENTRY_POINT}}
+
+  local:run:
+    deps: [ local:build ]
+    cmds:
+      - "{{.BIN_FILE}} -c {{.CONFIG_PATH}}"
+
+  local:clean:
+    cmds:
+      - rm -f {{.BIN_FILE}}
+
+  local:rebuild:
+    deps: [ local:clean, local:build ]
+
+  container:up:
+    cmds:
+      - docker compose -f {{.COMPOSE_FILE}} up -d --build
+
+  container:down:
+    cmds:
+      - docker compose -f {{.COMPOSE_FILE}} down -v
+
+  lint:
+    cmds:
+      - golangci-lint run
+
+  format:
+    cmds:
+      - go fmt ./...

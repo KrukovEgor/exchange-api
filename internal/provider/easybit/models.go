@@ -1,5 +1,7 @@
 package easybit
 
+const successFlag = 1
+
 type (
 	apiResponse[T any] struct {
 		Success int `json:"success"`
@@ -38,3 +40,15 @@ type (
 		NetworkList      []network `json:"networkList"`
 	}
 )
+
+func (r *apiResponse[T]) failed() bool {
+	return r.Success != successFlag
+}
+
+func (e *apiError) message() string {
+	if e.ErrorMessage == nil {
+		return "<nil>"
+	}
+
+	return *e.ErrorMessage
+}

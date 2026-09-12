@@ -1,12 +1,24 @@
 package infra
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/KrukovEgor/exchange-api/internal/config"
+	"github.com/KrukovEgor/exchange-api/internal/domain"
 	"golang.org/x/time/rate"
 )
+
+type authTransport struct {
+	apiKey string
+	next   http.RoundTripper
+}
+
+func (t *authTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	reqClone := r.Clone(r.Context())
+	reqClone.Header.Set("API-KEY", t.apiKey)
+
+	return t.next.RoundTrip(reqClone)
+}
 
 type rateLimitedTransport struct {
 	rateLimiter *rate.Limiter
@@ -18,72 +30,35 @@ func (t *rateLimitedTransport) RoundTrip(r *http.Request) (*http.Response, error
 		return nil, err
 	}
 
-	reqClone := r.Clone(r.Context())
-
-	if r.Body != nil {
-		if r.GetBody == nil {
-			return nil, fmt.Errorf("request body getter is not init")
-		}
-		body, err := r.GetBody()
-		if err != nil {
-			return nil, fmt.Errorf("request body getter is not init")
-		}
-		reqClone.Body = body
-	}
-
-	return t.next.RoundTrip(reqClone)
-}
-
-type authTransport struct {
-	apiKey string
-	next   http.RoundTripper
-}
-
-func (t *authTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	r.Header.Set("API-KEY", t.apiKey)
 	return t.next.RoundTrip(r)
-}
-
-func chainRoundTripper(
-	rt http.RoundTripper,
-	middlewares ...func(http.RoundTripper) http.RoundTripper,
-) http.RoundTripper {
-	for _, m := range middlewares {
-		rt = m(rt)
-	}
-	return rt
 }
 
 func NewEasyBitHTTPClient(cfg *config.EasyBitConfig) (*http.Client, error) {
 	const op = "infra.NewEasyBitHTTPClient"
 
 	if cfg == nil {
-		return nil, fmt.Errorf("%s: config is nil", op)
+		return nil, domain.NewInvalidInputError(op, "config is nil", nil)
 	}
 
-	limiter := rate.NewLimiter(rate.Limit(cfg.LimiterRate), cfg.LimiterBurst)
+	if cfg.APIKey == "" {
+		return nil, domain.NewInvalidInputError(op, "api key is empty", nil)
+	}
 
-	baseTransport := http.DefaultTransport.(*http.Transport).Clone()
-	baseTransport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
 
-	transportChain := chainRoundTripper(
-		baseTransport,
-		func(rt http.RoundTripper) http.RoundTripper {
-			return &authTransport{
-				apiKey: cfg.APIKey,
-				next:   rt,
-			}
-		},
-		func(rt http.RoundTripper) http.RoundTripper {
-			return &rateLimitedTransport{
-				rateLimiter: limiter,
-				next:        rt,
-			}
-		},
-	)
+	var rt http.RoundTripper = transport
+	rt = &authTransport{apiKey: cfg.APIKey, next: rt}
+	rt = &rateLimitedTransport{
+		rateLimiter: rate.NewLimiter(rate.Limit(cfg.LimiterRate), cfg.LimiterBurst),
+		next:        rt,
+	}
 
 	return &http.Client{
-		Transport: transportChain,
+		Transport: rt,
 		Timeout:   cfg.RequestTimeout,
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}, nil
 }
