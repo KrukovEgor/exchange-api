@@ -2,21 +2,37 @@ package easybit
 
 import (
 	"context"
-	"fmt"
-	"time"
+	"net/http"
 
 	"github.com/KrukovEgor/exchange-api/internal/domain"
 )
 
-const attemptTimeout = 2 * time.Second
+const (
+	currencyEndpoint = "/currencyList"
+)
 
-func (c *EasyBitClient) GetCurrencies(ctx context.Context, direction string) ([]domain.Currency, error) {
-	var rawData apiResponse[[]currency]
+func (c *Client) GetCurrencies(parentCtx context.Context, dir domain.Direction) ([]domain.Currency, error) {
+	const op = "easybit.Client.GetCurrencies"
 
-	err := c.doRequest(ctx, "GET", "/currencyList", attemptTimeout, &rawData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get available currencies: %w", err)
+	if !dir.Valid() {
+		return nil, domain.NewInvalidInputError(op, "invalid direction", nil)
 	}
 
-	return mapCurrencies(*rawData.Data, direction), nil
+	var rawData apiResponse[[]currency]
+
+	err := doRequest(parentCtx, c, http.MethodGet, currencyEndpoint, map[string][]string{}, &rawData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rawData.failed() {
+		return nil, mapAPIError(op, rawData.apiError)
+	}
+
+	if rawData.Data == nil {
+		return nil, domain.NewProviderInvalidDataError(op, "provider returned successful response without data", nil)
+	}
+
+	return mapCurrencies(*rawData.Data, dir), nil
 }
